@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PotterShoppingCart.Tests
@@ -16,11 +14,7 @@ namespace PotterShoppingCart.Tests
 
             var basket = new Basket
             {
-                Book1 = 1,
-                Book2 = 0,
-                Book3 = 0,
-                Book4 = 0,
-                Book5 = 0,
+                Books = new List<Book>() { new Book() { BookId = 1 } }
             };
 
             target.CalculateFee(basket);
@@ -36,11 +30,11 @@ namespace PotterShoppingCart.Tests
 
             var basket = new Basket
             {
-                Book1 = 1,
-                Book2 = 1,
-                Book3 = 0,
-                Book4 = 0,
-                Book5 = 0,
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 }
+                }
             };
 
             target.CalculateFee(basket);
@@ -48,23 +42,101 @@ namespace PotterShoppingCart.Tests
             var expected = 190;
             Assert.AreEqual(expected, basket.Fee);
         }
+
+        [TestMethod]
+        public void CalculateFeeTest_Buy_One_Book1_One_Book2_One_Book3_Should_Get_Fee_270()
+        {
+            PotterShoppingCart target = new PotterShoppingCart();
+
+            var basket = new Basket
+            {
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 3 }
+                }
+            };
+
+            target.CalculateFee(basket);
+
+            var expected = 270;
+            Assert.AreEqual(expected, basket.Fee);
+        }
+
+        [TestMethod]
+        public void CalculateFeeTest_Buy_One_Book1_One_Book2_One_Book3_One_book4_Should_Get_Fee_320()
+        {
+            PotterShoppingCart target = new PotterShoppingCart();
+
+            var basket = new Basket
+            {
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 3 },
+                    new Book() { BookId = 4 }
+                }
+            };
+
+            target.CalculateFee(basket);
+
+            var expected = 320;
+            Assert.AreEqual(expected, basket.Fee);
+        }
+
+        [TestMethod]
+        public void CalculateFeeTest_Buy_One_Book1_One_Book2_One_Book3_One_book4_One_book5_Should_Get_Fee_375()
+        {
+            PotterShoppingCart target = new PotterShoppingCart();
+
+            var basket = new Basket
+            {
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 3 },
+                    new Book() { BookId = 4 },
+                    new Book() { BookId = 5 }
+                }
+            };
+
+            target.CalculateFee(basket);
+
+            var expected = 375;
+            Assert.AreEqual(expected, basket.Fee);
+        }
     }
 
     public class Basket
     {
-        public int Book1 { get; set; }
-        public int Book2 { get; set; }
-        public int Book3 { get; set; }
-        public int Book4 { get; set; }
-        public int Book5 { get; set; }
-        public int Fee { get; set; }
+        public List<Book> Books { get; set; }
+        public decimal Fee { get; set; }
+    }
+
+    public class Book
+    {
+        public int BookId { get; set; }
     }
 
     public class PotterShoppingCart
     {
+        private Dictionary<int, decimal> _DiscountTable = new Dictionary<int, decimal>
+        {
+            {1, 1m},
+            {2, 0.95m},
+            {3, 0.9m},
+            {4, 0.8m},
+            {5, 0.75m}
+        };
         public void CalculateFee(Basket basket)
         {
-            basket.Fee = 100;
+            var booksCount = basket.Books.Count;
+            var distinctBooksCount = basket.Books.Select(b => b.BookId).Distinct().Count();
+
+            basket.Fee = 100*booksCount*_DiscountTable[distinctBooksCount];
         }
     }
 }
