@@ -108,6 +108,51 @@ namespace PotterShoppingCart.Tests
             var expected = 375;
             Assert.AreEqual(expected, basket.Fee);
         }
+
+        [TestMethod]
+        public void CalculateFeeTest_Buy_One_Book1_One_Book2_Two_Book3_Should_Get_Fee_370()
+        {
+            PotterShoppingCart target = new PotterShoppingCart();
+
+            var basket = new Basket
+            {
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 3 },
+                    new Book() { BookId = 3 }
+                }
+            };
+
+            target.CalculateFee(basket);
+
+            var expected = 370;
+            Assert.AreEqual(expected, basket.Fee);
+        }
+
+        [TestMethod]
+        public void CalculateFeeTest_Buy_One_Book1_Two_Book2_Two_Book3_Should_Get_Fee_460()
+        {
+            PotterShoppingCart target = new PotterShoppingCart();
+
+            var basket = new Basket
+            {
+                Books = new List<Book>()
+                {
+                    new Book() { BookId = 1 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 2 },
+                    new Book() { BookId = 3 },
+                    new Book() { BookId = 3 }
+                }
+            };
+
+            target.CalculateFee(basket);
+
+            var expected = 460;
+            Assert.AreEqual(expected, basket.Fee);
+        }
     }
 
     public class Basket
@@ -123,7 +168,7 @@ namespace PotterShoppingCart.Tests
 
     public class PotterShoppingCart
     {
-        private Dictionary<int, decimal> _DiscountTable = new Dictionary<int, decimal>
+        private readonly Dictionary<int, decimal> _DiscountTable = new Dictionary<int, decimal>
         {
             {1, 1m},
             {2, 0.95m},
@@ -131,12 +176,21 @@ namespace PotterShoppingCart.Tests
             {4, 0.8m},
             {5, 0.75m}
         };
+
         public void CalculateFee(Basket basket)
         {
-            var booksCount = basket.Books.Count;
-            var distinctBooksCount = basket.Books.Select(b => b.BookId).Distinct().Count();
+            var distinctBooks = basket.Books
+                .GroupBy(b => b.BookId)
+                .Select(b => b.First())
+                .ToList();
+            var distinctBooksCount = distinctBooks.Count();
+            distinctBooks.ForEach(b => basket.Books.Remove(basket.Books.First(x => x.BookId == b.BookId)));
+            basket.Fee += 100 * distinctBooksCount * _DiscountTable[distinctBooksCount];
 
-            basket.Fee = 100*booksCount*_DiscountTable[distinctBooksCount];
+            if (basket.Books.Count > 0)
+            {
+                CalculateFee(basket);
+            }
         }
     }
 }
